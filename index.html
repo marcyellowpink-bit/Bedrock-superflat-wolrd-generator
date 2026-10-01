@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>Generador de mundos superplanos – Bedrock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f3ee;--card:#fff;--tx:#1d1d1b;--mut:#6b6a63;--bd:#d9d7cc;--ac:#3b8f3b;--acx:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181816;--card:#242421;--tx:#eeede6;--mut:#a09f96;--bd:#3a3a35;--ac:#5cb85c;--acx:#10200f}}
+:root[data-theme="dark"]{--bg:#181816;--card:#242421;--tx:#eeede6;--mut:#a09f96;--bd:#3a3a35;--ac:#5cb85c;--acx:#10200f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:14px;max-width:720px;margin-inline:auto}
+h1{font-size:20px;margin:4px 0 2px}p.s{color:var(--mut);margin:0 0 12px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+h2{font-size:14px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+label{display:block;font-size:13px;color:var(--mut);margin:6px 0 2px}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;min-width:0}
+input,select,textarea{width:100%}
+button{cursor:pointer}button.p{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600;width:100%;padding:12px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips button{padding:6px 10px}
+.row{display:grid;grid-template-columns:22px 1fr 70px auto;gap:6px;align-items:center;margin-bottom:6px}
+.sw{width:22px;height:22px;border-radius:5px;border:1px solid var(--bd)}
+.row .b{display:flex;gap:4px}.row .b button{padding:6px 8px}
+#pv{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:8px;overflow:hidden;min-height:40px;background:linear-gradient(#bfe3ff,#e8f5ff)}
+#pv div{font-size:11px;color:#000a;padding:0 6px;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+textarea{font:12px/1.3 ui-monospace,Menlo,monospace;height:90px}
+label.ck{display:inline-flex;gap:6px;align-items:center;margin:4px 10px 4px 0;color:var(--tx)}label.ck input{width:auto}
+.m{color:var(--mut);font-size:13px;margin-top:6px}.err{color:#c0392b}
+</style></head><body>
+<h1>Superplano para Bedrock</h1>
+<p class="s">Diseña tus capas como en Java y genera el mundo para Bedrock. <span id="nb"></span></p>
+
+<div class="c"><h2>Presets</h2><div class="chips" id="pr"></div></div>
+
+<div class="c"><h2>Capas (arriba = superficie)</h2>
+<div id="ls"></div>
+<button id="add">+ Añadir capa</button>
+<div class="m" id="tot"></div>
+<h2 style="margin-top:12px">Vista previa</h2><div id="pv"></div></div>
+
+<div class="c"><h2>Mundo</h2>
+<label>Nombre</label><input id="nm" value="Mi mundo superplano" maxlength="40">
+<div class="g"><div><label>Bioma</label><select id="bi"></select></div>
+<div><label>Modo de juego</label><select id="gm"><option value="1">Creativo</option><option value="0">Supervivencia</option><option value="2">Aventura</option></select></div>
+<div><label>Dificultad</label><select id="df"><option value="0">Pacífico</option><option value="1">Fácil</option><option value="2" selected>Normal</option><option value="3">Difícil</option></select></div>
+<div><label>Trucos</label><select id="ch"><option value="1">Activados</option><option value="0">Desactivados</option></select></div></div>
+<label>Semilla (opcional)</label><input id="sd" inputmode="numeric" placeholder="0"></div>
+
+<div class="c"><h2>Estructuras y extras (Java)</h2><div id="ss" class="chips"></div>
+<label class="ck"><input type="checkbox" id="ft"> Características (decoración, minas)</label><label class="ck"><input type="checkbox" id="lk"> Lagos</label>
+<div class="m">Bedrock no usa estas opciones; solo se exportan para Java.</div></div>
+
+<div class="c"><h2>Importar</h2><div class="m">Pega ajustes de Bedrock (JSON), de Java (JSON de generator-settings o cadena clásica) para convertirlos entre ediciones.</div>
+<textarea id="im" placeholder="minecraft:bedrock,2*minecraft:dirt,minecraft:grass_block;minecraft:plains;village"></textarea><button id="ib">Importar al editor</button><div class="m" id="is"></div></div>
+
+<div class="c"><h2>Resultado</h2>
+<button class="p" id="dl">Descargar mundo (.mcworld)</button>
+<div class="m" id="st"></div>
+<label>Ajustes Bedrock (FlatWorldLayers)</label><textarea id="bj" readonly></textarea><button id="cb">Copiar</button>
+<label>Java: generator-settings (JSON, servidores y datapacks)</label><textarea id="jj" readonly></textarea><button id="cjj">Copiar</button>
+<label>Java: cadena clásica (versiones antiguas)</label><textarea id="jv" readonly></textarea><button id="cj">Copiar</button></div>
+
+<datalist id="bl"></datalist>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const BL=(()=>{const o=new Set(),a=(...x)=>x.forEach(v=>o.add(v)),s=t=>t.split(" ");
+const C=s("white orange magenta light_blue yellow lime pink gray light_gray cyan purple blue brown green red black");
+C.forEach(c=>s("wool carpet concrete concrete_powder stained_glass stained_glass_pane terracotta glazed_terracotta shulker_box candle").forEach(t=>a(c+"_"+t)));
+a("undyed_shulker_box","silver_glazed_terracotta","hardened_clay","glass","glass_pane","tinted_glass","candle");
+const W=s("oak spruce birch jungle acacia dark_oak mangrove cherry pale_oak");
+W.forEach(w=>{s("planks log wood leaves door trapdoor fence fence_gate stairs slab button pressure_plate").forEach(t=>a(w+"_"+t));a("stripped_"+w+"_log","stripped_"+w+"_wood")});
+a("wooden_door","trapdoor","fence_gate","wooden_button","wooden_pressure_plate","wooden_slab","fence","mangrove_roots","mangrove_propagule","azalea_leaves","flowering_azalea_leaves");
+s("crimson warped").forEach(w=>{s("planks stem hyphae door trapdoor fence fence_gate stairs slab button pressure_plate").forEach(t=>a(w+"_"+t));a("stripped_"+w+"_stem","stripped_"+w+"_hyphae")});
+s("bamboo_planks bamboo_mosaic bamboo_block stripped_bamboo_block bamboo_door bamboo_trapdoor bamboo_fence bamboo_fence_gate bamboo_stairs bamboo_slab bamboo_mosaic_stairs bamboo_mosaic_slab bamboo_button bamboo_pressure_plate nether_wart_block warped_wart_block shroomlight").forEach(x=>a(x));
+const ST=s("cobblestone mossy_cobblestone stone_brick mossy_stone_brick granite polished_granite diorite polished_diorite andesite polished_andesite sandstone smooth_sandstone red_sandstone smooth_red_sandstone brick nether_brick red_nether_brick quartz smooth_quartz prismarine prismarine_brick dark_prismarine purpur end_stone_brick blackstone polished_blackstone polished_blackstone_brick cobbled_deepslate polished_deepslate deepslate_brick deepslate_tile mud_brick tuff polished_tuff tuff_brick resin_brick sulfur polished_sulfur sulfur_brick cinnabar polished_cinnabar cinnabar_brick smooth_stone cut_sandstone cut_red_sandstone");
+ST.forEach(b=>a(b+"_stairs",b+"_slab",b+"_wall"));
+a("normal_stone_stairs","stone_stairs","stone_slab","stone_brick_slab","double_stone_slab");
+["","exposed_","weathered_","oxidized_"].forEach(ox=>["","waxed_"].forEach(wx=>{a(ox===""&&!wx?"copper_block":wx+ox+"copper");s("cut_copper cut_copper_stairs cut_copper_slab chiseled_copper copper_grate copper_door copper_trapdoor copper_bulb").forEach(t=>a(wx+ox+t))}));
+s("tube brain bubble fire horn").forEach(c=>s("coral_block coral coral_fan").forEach(t=>{a(c+"_"+t,"dead_"+c+"_"+t)}));
+W.concat(s("crimson warped bamboo")).forEach(w=>s("standing_sign wall_sign hanging_sign").forEach(t=>a(w+"_"+t)));a("standing_sign","wall_sign");
+a(...s("sulfur cinnabar potent_sulfur sulfur_spike sulfur_bricks cinnabar_bricks chiseled_sulfur chiseled_cinnabar"));
+a(...s(`bedrock stone dirt grass_block dirt_path coarse_dirt rooted_dirt podzol mycelium mud muddy_mangrove_roots farmland sand red_sand gravel clay suspicious_sand suspicious_gravel moss_block moss_carpet pale_moss_block pale_moss_carpet snow snow_layer powder_snow ice packed_ice blue_ice frosted_ice deepslate tuff calcite dripstone_block pointed_dripstone amethyst_block budding_amethyst small_amethyst_bud medium_amethyst_bud large_amethyst_bud amethyst_cluster smooth_basalt basalt polished_basalt obsidian crying_obsidian netherrack magma soul_sand soul_soil glowstone end_stone bone_block
+coal_ore iron_ore copper_ore gold_ore redstone_ore lapis_ore diamond_ore emerald_ore deepslate_coal_ore deepslate_iron_ore deepslate_copper_ore deepslate_gold_ore deepslate_redstone_ore deepslate_lapis_ore deepslate_diamond_ore deepslate_emerald_ore nether_gold_ore quartz_ore ancient_debris coal_block iron_block gold_block diamond_block emerald_block lapis_block redstone_block netherite_block raw_iron_block raw_copper_block raw_gold_block
+stone_bricks cracked_stone_bricks chiseled_stone_bricks mossy_stone_bricks cobblestone mossy_cobblestone brick_block sandstone chiseled_sandstone cut_sandstone smooth_sandstone red_sandstone chiseled_red_sandstone cut_red_sandstone smooth_red_sandstone nether_brick red_nether_brick cracked_nether_bricks chiseled_nether_bricks quartz_block chiseled_quartz_block quartz_pillar quartz_bricks smooth_quartz prismarine prismarine_bricks dark_prismarine sea_lantern purpur_block purpur_pillar end_bricks blackstone polished_blackstone chiseled_polished_blackstone gilded_blackstone polished_blackstone_bricks cracked_polished_blackstone_bricks deepslate_bricks cracked_deepslate_bricks deepslate_tiles cracked_deepslate_tiles chiseled_deepslate polished_deepslate cobbled_deepslate reinforced_deepslate mud_bricks packed_mud tuff_bricks chiseled_tuff chiseled_tuff_bricks polished_tuff resin_block resin_bricks chiseled_resin_bricks
+lantern soul_lantern torch soul_torch redstone_torch campfire soul_campfire end_rod lightning_rod beacon conduit respawn_anchor ochre_froglight verdant_froglight pearlescent_froglight sea_pickle redstone_lamp lit_redstone_lamp
+observer piston sticky_piston dispenser dropper hopper lever stone_button polished_blackstone_button stone_pressure_plate polished_blackstone_pressure_plate heavy_weighted_pressure_plate light_weighted_pressure_plate tripwire_hook target tnt note_block jukebox daylight_detector rail golden_rail detector_rail activator_rail slime honey_block honeycomb_block sculk sculk_catalyst sculk_shrieker sculk_sensor calibrated_sculk_sensor sculk_vein crafter trial_spawner vault mob_spawner command_block chain_command_block repeating_command_block structure_block jigsaw barrier structure_void allow deny border_block
+crafting_table furnace blast_furnace smoker anvil enchanting_table brewing_stand cauldron grindstone stonecutter_block loom cartography_table fletching_table smithing_table lectern bookshelf chiseled_bookshelf composter barrel chest trapped_chest ender_chest bell lodestone end_portal_frame end_gateway end_portal portal ladder scaffolding iron_bars chain iron_door iron_trapdoor flower_pot cake hay_block dried_kelp_block sponge wet_sponge melon_block pumpkin carved_pumpkin lit_pumpkin cactus reeds bamboo vine glow_lichen web dragon_egg turtle_egg frogspawn sniffer_egg decorated_pot
+short_grass tall_grass fern large_fern dead_bush dandelion poppy blue_orchid allium azure_bluet red_tulip orange_tulip white_tulip pink_tulip oxeye_daisy cornflower lily_of_the_valley wither_rose torchflower sunflower lilac rose_bush peony pitcher_plant brown_mushroom red_mushroom brown_mushroom_block red_mushroom_block mushroom_stem crimson_fungus warped_fungus crimson_roots warped_roots nether_sprouts weeping_vines twisting_vines kelp seagrass big_dripleaf small_dripleaf_block spore_blossom hanging_roots azalea flowering_azalea cave_vines sweet_berry_bush waterlily pink_petals leaf_litter wildflowers bush firefly_bush cactus_flower short_dry_grass tall_dry_grass
+chorus_plant chorus_flower water lava air fire soul_fire`));
+return[...o]})();
+const DY={white:"#eee",orange:"#e87a1e",magenta:"#c24fc2",light_blue:"#4aa8e0",yellow:"#f0d52a",lime:"#7fc41f",pink:"#f09ab8",gray:"#4a4d50",light_gray:"#9a9a94",cyan:"#16899b",purple:"#7a2fb0",blue:"#3548a8",brown:"#6b4426",green:"#4c6b1f",red:"#a82a24",black:"#1c1c20",sulfur:"#d9c63a",cinnabar:"#b8322c",potent_sulfur:"#e8d84a",copper:"#c06a46",exposed:"#a6806a",weathered:"#5f9a7a",oxidized:"#3fa38a",oak:"#a2824d",spruce:"#6b4e2e",birch:"#d3c28a",jungle:"#a0714a",acacia:"#b4602f",dark_oak:"#43301a",mangrove:"#7a3a3a",cherry:"#e8b4c0",pale_oak:"#e3dcd2",crimson:"#7a2f4a",warped:"#2f7a73",bamboo:"#c9c24a"};
+const COL={bedrock:"#333",stone:"#888",dirt:"#7a5230",grass_block:"#5a9e3a",sand:"#e3d49a",sandstone:"#d8c585",gravel:"#8e8a86",water:"#3b6fe0",lava:"#e8641a",air:"#0000",snow_layer:"#f4f8ff",ice:"#9ec9ff",packed_ice:"#7fb0f0",cobblestone:"#777",deepslate:"#4a4a52",obsidian:"#1a1226",netherrack:"#7a2a2a",end_stone:"#e0e0a8",glass:"#cde",clay:"#9aa3b3",terracotta:"#a5593d",red_sand:"#c4642a"};
+const BI=[["Llanura",1,"plains"],["Desierto",2,"desert"],["Colinas ventosas",3,"windswept_hills"],["Bosque",4,"forest"],["Taiga",5,"taiga"],["Pantano",6,"swamp"],["Río",7,"river"],["Yermo del Nether",8,"nether_wastes"],["El End",9,"the_end"],["Llanura nevada",12,"snowy_plains"],["Hongos",14,"mushroom_fields"],["Playa",16,"beach"],["Jungla",21,"jungle"],["Jungla de bambú",48,"bamboo_jungle"],["Bosque de abedules",27,"birch_forest"],["Bosque oscuro",29,"dark_forest"],["Taiga nevada",30,"snowy_taiga"],["Taiga antigua",32,"old_growth_pine_taiga"],["Sabana",35,"savanna"],["Mesa",37,"badlands"],["Océano",0,"ocean"],["Océano profundo",24,"deep_ocean"],["Océano cálido",40,"warm_ocean"],["Océano templado profundo",43,"deep_lukewarm_ocean"],["Océano frío",44,"cold_ocean"],["Océano helado",46,"frozen_ocean"],["Costa rocosa",25,"stony_shore"],["Playa nevada",26,"snowy_beach"],["Bosque de flores",132,"flower_forest"],["Llanura de girasoles",129,"sunflower_plains"],["Picos de hielo",140,"ice_spikes"],["Pradera",177,"meadow"],["Arboleda",178,"grove"],["Laderas nevadas",179,"snowy_slopes"],["Picos escarpados",180,"jagged_peaks"],["Picos helados",181,"frozen_peaks"],["Picos rocosos",182,"stony_peaks"],["Cuevas frondosas",185,"lush_caves"],["Cuevas de espeleotemas",186,"dripstone_caves"],["Profundidades oscuras",190,"deep_dark"],["Manglar",191,"mangrove_swamp"],["Cerezos",192,"cherry_grove"],["Vacío",127,"the_void"]];
+const NP=[["snow","snow_layer"],["cobweb","web"],["lily_pad","waterlily"],["sugar_cane","reeds"],["bricks","brick_block"],["stonecutter","stonecutter_block"],["spawner","mob_spawner"],["jack_o_lantern","lit_pumpkin"],["end_stone_bricks","end_bricks"],["nether_bricks","nether_brick"],["slime_block","slime"],["magma_block","magma"],["oak_door","wooden_door"],["oak_trapdoor","trapdoor"],["oak_fence_gate","fence_gate"],["oak_button","wooden_button"],["oak_pressure_plate","wooden_pressure_plate"],["stone_stairs","normal_stone_stairs"],["cobblestone_stairs","stone_stairs"],["terracotta","hardened_clay"],["light_gray_glazed_terracotta","silver_glazed_terracotta"],["grass_path","dirt_path"]];
+const J2B=Object.fromEntries(NP),B2J=Object.fromEntries(NP.map(([j,b])=>[b,j]));
+const jn=n=>B2J[n]||n,bn=n=>J2B[n]||n;
+const SS="villages mineshafts strongholds pillager_outposts ruined_portals ocean_ruins shipwrecks ocean_monuments igloos desert_pyramids jungle_temples swamp_huts woodland_mansions ancient_cities trail_ruins trial_chambers buried_treasures".split(" ").map(s=>"minecraft:"+s);
+const P=(n,l,b,s,f,k)=>[n,{l,b,s:s.map(x=>"minecraft:"+x),f,k}];
+const PS=Object.fromEntries([
+P("Clásico",[["bedrock",1],["dirt",2],["grass_block",1]],1,["villages"],0,0),
+P("Túnel",[["bedrock",1],["stone",230],["dirt",5],["grass_block",1]],3,["mineshafts","strongholds"],1,0),
+P("Mundo acuático",[["bedrock",1],["stone",5],["dirt",5],["gravel",5],["water",90]],43,["ocean_ruins","shipwrecks","ocean_monuments"],0,0),
+P("Overworld",[["bedrock",1],["stone",59],["dirt",3],["grass_block",1]],1,["villages","mineshafts","pillager_outposts","ruined_portals","strongholds"],1,1),
+P("Reino nevado",[["bedrock",1],["stone",59],["dirt",3],["grass_block",1],["snow_layer",1]],12,["igloos"],0,0),
+P("Foso sin fondo",[["cobblestone",2],["dirt",2],["grass_block",1]],1,["villages"],0,0),
+P("Desierto",[["bedrock",1],["stone",3],["sandstone",52],["sand",8]],2,["villages","desert_pyramids","mineshafts","strongholds"],1,0),
+P("Redstone listo",[["bedrock",1],["sandstone",116]],2,[],0,0),
+P("El vacío",[["air",1]],127,[],0,0)]);
+let L=PS["Clásico"].l.map(x=>[...x]);
+const $=i=>document.getElementById(i);
+$("nb").textContent=BL.length+" bloques disponibles: escribe para buscar.";$("bl").innerHTML=BL.map(b=>`<option value="${b}">`).join("");
+$("bi").innerHTML=BI.map(b=>`<option value="${b[1]}">${b[0]}</option>`).join("");
+$("pr").innerHTML=Object.keys(PS).map(k=>`<button data-k="${k}">${k}</button>`).join("");
+$("pr").onclick=e=>{const k=e.target.dataset.k;if(!k)return;const p=PS[k];L=p.l.map(x=>[...x]);$("bi").value=p.b;setSt(p.s);$("ft").checked=!!p.f;$("lk").checked=!!p.k;render()};
+const sts=()=>[...document.querySelectorAll("#ss input:checked")].map(i=>i.value);
+function setSt(a){document.querySelectorAll("#ss input").forEach(i=>i.checked=a.includes(i.value))}
+function setBio(n){const b=BI.find(x=>x[2]===clean(n||""));if(b)$("bi").value=b[1]}
+const clean=n=>n.trim().replace(/^minecraft:/,"").toLowerCase().replace(/\s+/g,"_");
+const color=n=>COL[n]||DY[Object.keys(DY).sort((x,y)=>y.length-x.length).find(k=>n===k||n.startsWith(k+"_")||n.startsWith("waxed_"+k))]||"hsl("+([...n].reduce((a,c)=>a+c.charCodeAt(0)*7,0)%360)+",35%,55%)";
+function total(){return L.reduce((a,l)=>a+l[1],0)}
+function render(){
+ $("ls").innerHTML=[...L].map((l,i)=>i).reverse().map(i=>{const l=L[i];return `<div class="row"><span class="sw" style="background:${color(clean(l[0]))}"></span><input list="bl" value="${l[0]}" data-i="${i}" data-f="0"><input type="number" min="1" max="384" value="${l[1]}" data-i="${i}" data-f="1"><span class="b"><button data-a="u" data-i="${i}">↑</button><button data-a="d" data-i="${i}">↓</button><button data-a="x" data-i="${i}">✕</button></span></div>`}).join("");
+ out();
+}
+function out(){
+ const t=total(),ok=t>=1&&t<=384&&L.every(l=>l[0].trim()&&l[1]>=1);
+ $("tot").innerHTML=`Total: ${t} bloques (máx. 384, desde Y=-64 hasta Y=${-64+t-1})`+(ok?"":` <span class="err">— revisa las capas</span>`);
+ $("pv").innerHTML=[...L].reverse().map(l=>`<div style="height:${Math.max(14,Math.min(60,l[1]*2.2))}px;background:${color(clean(l[0]))}">${clean(l[0])} ×${l[1]}</div>`).join("");
+ $("bj").value=bjson();$("jv").value=jstr();$("jj").value=jjson();$("dl").disabled=!ok;
+}
+function bjson(){return JSON.stringify({biome_id:+$("bi").value,block_layers:L.map(l=>({block_name:"minecraft:"+clean(l[0]),count:+l[1]})),encoding_version:6,structure_options:null,world_version:"version.post_1_18"})}
+function jstr(){const b=BI.find(x=>x[1]==$("bi").value);return L.map(l=>(l[1]>1?l[1]+"*":"")+"minecraft:"+jn(clean(l[0]))).join(",")+";minecraft:"+b[2]+";"+sts().map(s=>s.slice(10).replace(/s$/,"")).join(",")}
+function jjson(){const b=BI.find(x=>x[1]==$("bi").value);return JSON.stringify({biome:"minecraft:"+b[2],features:$("ft").checked,lakes:$("lk").checked,layers:L.map(l=>({block:"minecraft:"+jn(clean(l[0])),height:+l[1]})),structure_overrides:sts()})}
+function imp(){const s=$("is");s.className="m";try{const t=$("im").value.trim();if(!t)return;
+ if(t[0]==="{"){const o=JSON.parse(t);
+  if(o.block_layers){L=o.block_layers.map(x=>[clean(x.block_name),+x.count]);if(o.biome_id!=null)$("bi").value=o.biome_id}
+  else{const q=o.settings||o;L=q.layers.map(x=>[bn(clean(x.block)),+x.height]);setBio(q.biome);setSt(q.structure_overrides||[]);$("ft").checked=!!q.features;$("lk").checked=!!q.lakes}}
+ else{const p=t.split(";");if(/^\d+$/.test(p[0]))p.shift();
+  L=p[0].split(",").map(x=>{const m=x.trim().match(/^(?:(\d+)\*)?(.+)$/);return[bn(clean(m[2])),+(m[1]||1)]});
+  setBio(p[1]);setSt((p[2]||"").split(",").filter(Boolean).map(x=>"minecraft:"+clean(x)+"s"))}
+ render();s.textContent="Importado."}catch(e){s.className="m err";s.textContent="No pude leer ese texto: "+e.message}}
+$("ls").oninput=e=>{const{i,f}=e.target.dataset;if(i===undefined)return;L[i][f]=f==="1"?Math.max(0,parseInt(e.target.value)||0):e.target.value;out();const sw=e.target.closest(".row").firstChild;sw.style.background=color(clean(L[i][0]))};
+$("ls").onclick=e=>{const b=e.target.closest("button");if(!b)return;const i=+b.dataset.i,a=b.dataset.a;
+ if(a==="x"&&L.length>1)L.splice(i,1);
+ if(a==="u"&&i<L.length-1)[L[i],L[i+1]]=[L[i+1],L[i]];
+ if(a==="d"&&i>0)[L[i],L[i-1]]=[L[i-1],L[i]];
+ render()};
+$("add").onclick=()=>{L.push(["stone",1]);render()};
+["bi"].forEach(i=>$(i).onchange=out);
+// NBT little-endian
+function nbt(entries){const p=[];const E=new TextEncoder();
+ const i16=v=>p.push(v&255,(v>>8)&255),i32=v=>{const b=new DataView(new ArrayBuffer(4));b.setInt32(0,v,true);p.push(...new Uint8Array(b.buffer))};
+ const str=s=>{const b=E.encode(s);i16(b.length);p.push(...b)};
+ p.push(10);i16(0);
+ for(const[t,n,v]of entries){p.push(t);str(n);
+  if(t===1)p.push(v&255);else if(t===3)i32(v);
+  else if(t===4){const b=new DataView(new ArrayBuffer(8));b.setBigInt64(0,BigInt(v),true);p.push(...new Uint8Array(b.buffer))}
+  else if(t===8)str(v);
+  else if(t===9){p.push(3);i32(v.length);v.forEach(i32)}}
+ p.push(0);return new Uint8Array(p)}
+function level(){
+ const t=total(),name=$("nm").value.trim()||"Mundo superplano";
+ let seed="0";try{seed=BigInt($("sd").value||"0").toString()}catch(e){}
+ const body=nbt([[3,"Generator",2],[8,"FlatWorldLayers",bjson()],[8,"LevelName",name],[4,"RandomSeed",seed],
+  [3,"GameType",+$("gm").value],[3,"Difficulty",+$("df").value],[1,"commandsEnabled",+$("ch").value],
+  [3,"SpawnX",0],[3,"SpawnY",-64+t],[3,"SpawnZ",0],[3,"StorageVersion",10],
+  [4,"LastPlayed",Math.floor(Date.now()/1000)],[9,"lastOpenedWithVersion",[26,30,0,0,0]]]);
+ const h=new DataView(new ArrayBuffer(8));h.setInt32(0,10,true);h.setInt32(4,body.length,true);
+ const r=new Uint8Array(8+body.length);r.set(new Uint8Array(h.buffer));r.set(body,8);return{dat:r,name}}
+$("dl").onclick=async()=>{
+ const s=$("st");s.className="m";s.textContent="";
+ try{
+  const{dat,name}=level(),z=new JSZip();
+  z.file("level.dat",dat);z.file("levelname.txt",name);z.folder("db");
+  const blob=await z.generateAsync({type:"blob"});
+  const base=name.replace(/[^\w\- ]/g,"").trim()||"mundo";
+  const u=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=u;a.download=base+".mcworld";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),4000);
+  s.textContent="Listo. Abre el archivo .mcworld con Minecraft para importar el mundo.";
+ }catch(e){s.className="m err";s.textContent="No se pudo descargar ("+(e.message||e)+")."}};
+function cp(id){return async()=>{const t=$(id);t.select();try{await navigator.clipboard.writeText(t.value)}catch(e){document.execCommand("copy")}}}
+$("cb").onclick=cp("bj");$("cjj").onclick=cp("jj");$("ib").onclick=imp;$("ss").onchange=out;$("ft").onchange=out;$("lk").onchange=out;$("cj").onclick=cp("jv");
+["nm"].forEach(i=>$(i).oninput=()=>{});
+$("ss").innerHTML=SS.map(s=>`<label class="ck"><input type="checkbox" value="${s}"> ${s.slice(10)}</label>`).join("");setSt(PS["Clásico"].s);
+$("ss").onchange=out;
+render();
+</script></body></html>
